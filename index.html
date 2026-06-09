@@ -1,0 +1,478 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风哥万能工具箱</title>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; min-height: 100vh; }
+header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: #fff; padding: 20px 24px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+header h1 { font-size: 22px; font-weight: 600; letter-spacing: 1px; }
+header .sub { font-size: 12px; opacity: .7; margin-top: 2px; }
+header .version { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 12px; background: rgba(255,255,255,.15); padding: 4px 10px; border-radius: 10px; }
+#version-notice { display: none; background: #fff3cd; color: #856404; text-align: center; padding: 8px; font-size: 13px; }
+#version-notice a { color: #1a73e8; }
+#version-notice.show { display: block; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+
+/* Home grid */
+.tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 8px; }
+.tool-card { background: #fff; border-radius: 12px; padding: 24px 16px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.08); transition: transform .15s, box-shadow .15s; }
+.tool-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+.tool-card .icon { font-size: 36px; margin-bottom: 10px; }
+.tool-card .name { font-size: 15px; font-weight: 600; color: #222; }
+.tool-card .desc { font-size: 12px; color: #888; margin-top: 4px; line-height: 1.4; }
+
+/* Tool page */
+#tool-page { display: none; }
+#tool-page.active { display: block; }
+#home-page.hidden { display: none; }
+.tool-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.back-btn { background: none; border: none; font-size: 16px; color: #1a73e8; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
+.back-btn:hover { background: #e8f0fe; }
+.tool-title { font-size: 20px; font-weight: 600; }
+.tool-desc { color: #666; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+
+/* Upload zone */
+.upload-zone { border: 2px dashed #ccc; border-radius: 10px; padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: #fafbfc; }
+.upload-zone:hover, .upload-zone.drag-over { border-color: #1a73e8; background: #e8f0fe; }
+.upload-zone .icon { font-size: 40px; color: #999; }
+.upload-zone .text { margin-top: 8px; font-size: 14px; color: #666; }
+.upload-zone .hint { font-size: 12px; color: #aaa; margin-top: 4px; }
+.upload-zone input[type=file] { display: none; }
+
+/* File list */
+.file-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.file-item { background: #e8f0fe; padding: 6px 12px; border-radius: 6px; font-size: 13px; color: #1a73e8; display: flex; align-items: center; gap: 6px; }
+.file-item .remove { cursor: pointer; color: #e53935; font-weight: bold; font-size: 16px; line-height: 1; }
+.file-item .remove:hover { color: #c62828; }
+
+/* Form */
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 4px; }
+.form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,.15); }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-primary { background: #1a73e8; color: #fff; }
+.btn-primary:hover { background: #1557b0; }
+.btn-primary:disabled { background: #93b8f0; cursor: not-allowed; }
+.btn-success { background: #0d904f; color: #fff; }
+.btn-success:hover { background: #0a7a43; }
+.btn-outline { background: none; border: 1px solid #1a73e8; color: #1a73e8; }
+.btn-outline:hover { background: #e8f0fe; }
+.btn-group { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+/* Result */
+.result-area { margin-top: 20px; padding: 16px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: none; }
+.result-area.show { display: block; }
+.result-area .msg { font-size: 14px; color: #166534; margin-bottom: 12px; }
+
+/* Preview */
+.preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.preview-item { border: 1px solid #eee; border-radius: 6px; padding: 6px; background: #fff; text-align: center; }
+.preview-item img { max-width: 120px; max-height: 120px; border-radius: 4px; display: block; }
+.preview-item .label { font-size: 11px; color: #888; margin-top: 4px; }
+
+/* Loading */
+.loading { text-align: center; padding: 24px; color: #888; }
+.spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #e0e0e0; border-top-color: #1a73e8; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔧 风哥万能工具箱</h1>
+  <div class="sub">PDF 工具 · 点开即用</div>
+  <span class="version" id="versionLabel">v1.0.0</span>
+</header>
+<div id="version-notice"></div>
+
+<div class="container" id="home-page">
+  <p style="color:#888;font-size:13px;margin-bottom:12px;">选择一个工具开始</p>
+  <div class="tool-grid" id="toolGrid"></div>
+</div>
+
+<div class="container" id="tool-page">
+  <div class="tool-header">
+    <button class="back-btn" onclick="showHome()">&#8592; 返回</button>
+    <span class="tool-title" id="toolTitle"></span>
+  </div>
+  <div class="tool-desc" id="toolDesc"></div>
+  <div id="toolContent"></div>
+  <div class="result-area" id="resultArea">
+    <div class="msg" id="resultMsg"></div>
+    <div id="resultContent"></div>
+    <div class="btn-group" id="resultButtons"></div>
+  </div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const VERSION = 'v1.0.0';
+const VERSION_URL = 'https://raw.githubusercontent.com/LENNON1903A/fengge-toolbox/main/version.txt';
+let currentFiles = {};
+
+const TOOLS = [
+  { id:'images-to-pdf', name:'图片转PDF', icon:'🖼️', desc:'把多张图片按顺序合并成一个 PDF，一张图一页', color:'#e3f2fd',
+    inputs:[{ id:'files', type:'files', label:'选择图片', accept:'image/*', multiple:true }],
+    process: async function(inputs) {
+      const files = inputs.files;
+      if (!files.length) throw '请选择图片';
+      const doc = await PDFDocument.create();
+      for (let f of files) {
+        const buf = await f.arrayBuffer();
+        const ext = f.name.split('.').pop().toLowerCase();
+        let img;
+        if (ext === 'png') img = await doc.embedPng(buf);
+        else img = await doc.embedJpg(buf);
+        const dims = img.scale(1);
+        const page = doc.addPage([dims.width, dims.height]);
+        page.drawImage(img, { x:0, y:0, width:dims.width, height:dims.height });
+      }
+      return { data:await doc.save(), name:'合并PDF.pdf', type:'application/pdf' };
+    }
+  },
+  { id:'pdf-to-images', name:'PDF转图片', icon:'📄', desc:'把 PDF 每一页导出为 PNG 图片，可打包下载', color:'#fce4ec',
+    inputs:[{ id:'file', type:'files', label:'选择 PDF', accept:'.pdf', multiple:false }],
+    process: async function(inputs) {
+      const file = inputs.file[0];
+      if (!file) throw '请选择 PDF';
+      const buf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data:buf }).promise;
+      const zip = new JSZip();
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale:2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext:canvas.getContext('2d'), viewport }).promise;
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        zip.file('page_' + i + '.png', blob);
+      }
+      const zipData = await zip.generateAsync({ type:'blob' });
+      return { data:zipData, name:file.name.replace(/\.[^/.]+$/, '') + '_图片.zip', type:'application/zip' };
+    }
+  },
+  { id:'extract-pages', name:'提取页码', icon:'📑', desc:'从 PDF 中提取指定页面，保留原始质量', color:'#e8f5e9',
+    inputs:[
+      { id:'file', type:'files', label:'选择 PDF', accept:'.pdf', multiple:false },
+      { id:'pages', type:'text', label:'要提取的页码', placeholder:'例如: 1,3,5-8,10' }
+    ],
+    process: async function(inputs) {
+      const file = inputs.file[0];
+      const pagesStr = inputs.pages;
+      if (!file) throw '请选择 PDF';
+      if (!pagesStr.trim()) throw '请输入要提取的页码';
+      const buf = await file.arrayBuffer();
+      const srcDoc = await PDFDocument.load(buf);
+      const total = srcDoc.getPageCount();
+      const indices = parsePages(pagesStr, total);
+      if (!indices.length) throw '没有有效的页码';
+      const dstDoc = await PDFDocument.create();
+      const pages = await dstDoc.copyPages(srcDoc, indices);
+      pages.forEach(p => dstDoc.addPage(p));
+      return { data:await dstDoc.save(), name:file.name.replace(/\.[^/.]+$/, '') + '_提取.pdf', type:'application/pdf' };
+    }
+  },
+  { id:'insert-pages', name:'插入页面', icon:'📋', desc:'向 PDF 指定位置插入图片或另一个 PDF 的页面', color:'#fff3e0',
+    inputs:[
+      { id:'target', type:'files', label:'目标 PDF（被插入的）', accept:'.pdf', multiple:false },
+      { id:'source', type:'files', label:'要插入的内容（图片或 PDF）', accept:'image/*,.pdf', multiple:false },
+      { id:'position', type:'number', label:'插入到第几页后面', placeholder:'例如: 1（插在第1页后面）', default:'1' }
+    ],
+    process: async function(inputs) {
+      const targetFile = inputs.target[0];
+      const sourceFile = inputs.source[0];
+      const pos = parseInt(inputs.position) || 1;
+      if (!targetFile || !sourceFile) throw '请选择目标 PDF 和要插入的内容';
+      const targetBuf = await targetFile.arrayBuffer();
+      const targetDoc = await PDFDocument.load(targetBuf);
+      const ext = sourceFile.name.split('.').pop().toLowerCase();
+      const insertIdx = Math.min(pos, targetDoc.getPageCount());
+      if (['png','jpg','jpeg'].includes(ext)) {
+        const srcBuf = await sourceFile.arrayBuffer();
+        let img;
+        if (ext === 'png') img = await targetDoc.embedPng(srcBuf);
+        else img = await targetDoc.embedJpg(srcBuf);
+        const dims = img.scale(1);
+        const page = targetDoc.insertPage(insertIdx, [dims.width, dims.height]);
+        page.drawImage(img, { x:0, y:0, width:dims.width, height:dims.height });
+      } else {
+        const srcBuf = await sourceFile.arrayBuffer();
+        const srcDoc = await PDFDocument.load(srcBuf);
+        const pages = await targetDoc.copyPages(srcDoc, srcDoc.getPageIndices());
+        pages.reverse().forEach(p => targetDoc.insertPage(insertIdx, p));
+      }
+      return { data:await targetDoc.save(), name:targetFile.name.replace(/\.[^/.]+$/, '') + '_插入.pdf', type:'application/pdf' };
+    }
+  },
+  { id:'replace-pages', name:'替换页面', icon:'🔄', desc:'用图片或另一个 PDF 的页面替换 PDF 的指定页', color:'#f3e5f5',
+    inputs:[
+      { id:'target', type:'files', label:'目标 PDF', accept:'.pdf', multiple:false },
+      { id:'source', type:'files', label:'替换成（图片或 PDF）', accept:'image/*,.pdf', multiple:false },
+      { id:'page', type:'number', label:'替换第几页', placeholder:'例如: 1', default:'1' }
+    ],
+    process: async function(inputs) {
+      const targetFile = inputs.target[0];
+      const sourceFile = inputs.source[0];
+      const pageNum = parseInt(inputs.page) || 1;
+      if (!targetFile || !sourceFile) throw '请选择目标 PDF 和替换内容';
+      const targetBuf = await targetFile.arrayBuffer();
+      const targetDoc = await PDFDocument.load(targetBuf);
+      const ext = sourceFile.name.split('.').pop().toLowerCase();
+      const replaceIdx = Math.min(pageNum - 1, targetDoc.getPageCount() - 1);
+      if (['png','jpg','jpeg'].includes(ext)) {
+        const srcBuf = await sourceFile.arrayBuffer();
+        let img;
+        if (ext === 'png') img = await targetDoc.embedPng(srcBuf);
+        else img = await targetDoc.embedJpg(srcBuf);
+        const dims = img.scale(1);
+        const page = targetDoc.insertPage(replaceIdx, [dims.width, dims.height]);
+        page.drawImage(img, { x:0, y:0, width:dims.width, height:dims.height });
+        targetDoc.removePage(replaceIdx + 1);
+      } else {
+        const srcBuf = await sourceFile.arrayBuffer();
+        const srcDoc = await PDFDocument.load(srcBuf);
+        const pages = await targetDoc.copyPages(srcDoc, [0]);
+        targetDoc.insertPage(replaceIdx, pages[0]);
+        targetDoc.removePage(replaceIdx + 1);
+      }
+      return { data:await targetDoc.save(), name:targetFile.name.replace(/\.[^/.]+$/, '') + '_替换.pdf', type:'application/pdf' };
+    }
+  },
+  { id:'merge-pdfs', name:'合并 PDF', icon:'📎', desc:'把多个 PDF 文件按顺序合并成一个', color:'#e0f2f1',
+    inputs:[
+      { id:'files', type:'files', label:'选择 PDF（按顺序选）', accept:'.pdf', multiple:true }
+    ],
+    process: async function(inputs) {
+      const files = inputs.files;
+      if (files.length < 2) throw '请选择至少 2 个 PDF';
+      const merged = await PDFDocument.create();
+      for (let f of files) {
+        const buf = await f.arrayBuffer();
+        const doc = await PDFDocument.load(buf);
+        const pages = await merged.copyPages(doc, doc.getPageIndices());
+        pages.forEach(p => merged.addPage(p));
+      }
+      return { data:await merged.save(), name:'合并PDF.pdf', type:'application/pdf' };
+    }
+  }
+];
+
+function parsePages(str, total) {
+  const set = new Set();
+  for (let part of str.split(',')) {
+    part = part.trim();
+    if (!part) continue;
+    if (part.includes('-')) {
+      const [a, b] = part.split('-').map(s => parseInt(s.trim()));
+      for (let i = Math.max(1,a); i <= Math.min(b,total); i++) set.add(i-1);
+    } else {
+      const n = parseInt(part);
+      if (n >= 1 && n <= total) set.add(n-1);
+    }
+  }
+  return [...set].sort((a,b) => a-b);
+}
+
+function showHome() {
+  document.getElementById('home-page').classList.remove('hidden');
+  document.getElementById('tool-page').classList.remove('active');
+  document.getElementById('resultArea').classList.remove('show');
+}
+function showTool(id) {
+  const tool = TOOLS.find(t => t.id === id);
+  if (!tool) return;
+  document.getElementById('home-page').classList.add('hidden');
+  document.getElementById('tool-page').classList.add('active');
+  document.getElementById('toolTitle').textContent = tool.icon + ' ' + tool.name;
+  document.getElementById('toolDesc').textContent = tool.desc;
+  document.getElementById('resultArea').classList.remove('show');
+  currentFiles = {};
+  const container = document.getElementById('toolContent');
+  container.innerHTML = '';
+  const form = document.createElement('div');
+  tool.inputs.forEach(inp => {
+    const group = document.createElement('div');
+    group.className = 'form-group';
+    const label = document.createElement('label');
+    label.textContent = inp.label;
+    group.appendChild(label);
+    if (inp.type === 'files') {
+      const zone = document.createElement('div');
+      zone.className = 'upload-zone';
+      zone.innerHTML = '<div class="icon">&#128206;</div><div class="text">点击上传或拖拽文件到这里</div><div class="hint">支持 ' + inp.accept + ' 格式</div>';
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = inp.accept;
+      fileInput.multiple = inp.multiple;
+      fileInput.id = 'input_' + inp.id;
+      zone.appendChild(fileInput);
+      const list = document.createElement('div');
+      list.className = 'file-list';
+      list.id = 'list_' + inp.id;
+      zone.onclick = () => fileInput.click();
+      zone.ondragover = e => { e.preventDefault(); zone.classList.add('drag-over'); };
+      zone.ondragleave = () => zone.classList.remove('drag-over');
+      zone.ondrop = e => { e.preventDefault(); zone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files, fileInput, list, inp.multiple, inp.id); };
+      fileInput.onchange = () => handleFiles(fileInput.files, fileInput, list, inp.multiple, inp.id);
+      group.appendChild(zone);
+      group.appendChild(list);
+    } else if (inp.type === 'text') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'input_' + inp.id;
+      input.placeholder = inp.placeholder || '';
+      input.value = inp.default || '';
+      group.appendChild(input);
+    } else if (inp.type === 'number') {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.id = 'input_' + inp.id;
+      input.placeholder = inp.placeholder || '';
+      input.value = inp.default || '';
+      input.min = '1';
+      group.appendChild(input);
+    }
+    form.appendChild(group);
+  });
+  const btnGroup = document.createElement('div');
+  btnGroup.className = 'btn-group';
+  const runBtn = document.createElement('button');
+  runBtn.className = 'btn btn-primary';
+  runBtn.innerHTML = '&#9654; 开始处理';
+  runBtn.id = 'runBtn';
+  runBtn.onclick = () => runTool(tool);
+  btnGroup.appendChild(runBtn);
+  form.appendChild(btnGroup);
+  container.appendChild(form);
+}
+function handleFiles(files, fileInput, listEl, multiple, id) {
+  if (!multiple) {
+    currentFiles[id] = [files[0]];
+    fileInput.files = files;
+    listEl.innerHTML = '<div class="file-item">' + files[0].name + ' <span class="remove" onclick="removeFile(\'' + id + '\',0)">&times;</span></div>';
+    return;
+  }
+  if (!currentFiles[id]) currentFiles[id] = [];
+  for (let f of files) currentFiles[id].push(f);
+  renderFileList(id, listEl);
+  // Update the file input's files list (not trivial, but we use currentFiles)
+}
+function renderFileList(id, listEl) {
+  const files = currentFiles[id] || [];
+  listEl.innerHTML = files.map((f,i) => '<div class="file-item">' + f.name + ' <span class="remove" onclick="removeFile(\'' + id + '\',' + i + ')">&times;</span></div>').join('');
+}
+function removeFile(id, idx) {
+  if (currentFiles[id]) currentFiles[id].splice(idx, 1);
+  const listEl = document.getElementById('list_' + id);
+  if (listEl) renderFileList(id, listEl);
+}
+
+async function runTool(tool) {
+  const runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  runBtn.innerHTML = '<span class="spinner"></span> 处理中...';
+  document.getElementById('resultArea').classList.remove('show');
+  try {
+    const inputs = {};
+    for (let inp of tool.inputs) {
+      if (inp.type === 'files') {
+        inputs[inp.id] = currentFiles['input_' + inp.id] || currentFiles[inp.id] || [];
+        const el = document.getElementById('input_' + inp.id);
+        if (el && el.files && el.files.length) {
+          inputs[inp.id] = Array.from(el.files);
+        }
+        if (currentFiles['_' + tool.id + '_' + inp.id]) {
+          inputs[inp.id] = currentFiles['_' + tool.id + '_' + inp.id];
+        }
+      } else {
+        const el = document.getElementById('input_' + inp.id);
+        inputs[inp.id] = el ? el.value : '';
+      }
+    }
+    const result = await tool.process(inputs);
+    showResult(result);
+  } catch(e) {
+    showError(e.message || e);
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = '&#9654; 开始处理';
+  }
+}
+function showResult(result) {
+  const area = document.getElementById('resultArea');
+  area.className = 'result-area show';
+  document.getElementById('resultMsg').innerHTML = '&#10003; 处理完成';
+  document.getElementById('resultContent').innerHTML = '';
+  document.getElementById('resultButtons').innerHTML = '<button class="btn btn-success" onclick="downloadResult(\'' + encodeURIComponent(result.name) + '\',\'' + result.type + '\')">&#11015; 下载 ' + result.name + '</button>';
+  window._resultData = result;
+}
+function showError(msg) {
+  const area = document.getElementById('resultArea');
+  area.className = 'result-area show';
+  area.style.borderColor = '#fecaca';
+  area.style.background = '#fef2f2';
+  document.getElementById('resultMsg').innerHTML = '&#10007; 出错了';
+  document.getElementById('resultMsg').style.color = '#991b1b';
+  document.getElementById('resultContent').textContent = msg;
+  document.getElementById('resultButtons').innerHTML = '';
+  setTimeout(() => {
+    area.style.borderColor = '#bbf7d0';
+    area.style.background = '#f0fdf4';
+    document.getElementById('resultMsg').style.color = '#166534';
+  }, 5000);
+}
+function downloadResult(name, type) {
+  const r = window._resultData;
+  if (!r) return;
+  const blob = r.data instanceof Blob ? r.data : new Blob([r.data], { type:type || 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = decodeURIComponent(name);
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function checkVersion() {
+  try {
+    const res = await fetch(VERSION_URL + '?t=' + Date.now());
+    if (!res.ok) return;
+    const text = (await res.text()).trim();
+    if (text && text !== VERSION) {
+      const el = document.getElementById('version-notice');
+      el.className = 'show';
+      el.innerHTML = '&#128227; 发现新版本 ' + text + '，<a href="https://github.com/LENNON1903A/fengge-toolbox" target="_blank">点击这里下载</a>';
+    }
+  } catch(e) {}
+}
+
+function init() {
+  const grid = document.getElementById('toolGrid');
+  TOOLS.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.innerHTML = '<div class="icon">' + t.icon + '</div><div class="name">' + t.name + '</div><div class="desc">' + t.desc + '</div>';
+    card.onclick = () => showTool(t.id);
+    grid.appendChild(card);
+  });
+  checkVersion();
+}
+init();
+</script>
+</body>
+</html>
