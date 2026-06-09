@@ -123,24 +123,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dis
 const VERSION = 'v1.0.0';
 const VERSION_URL = 'https://fengge-toolbox.netlify.app/version.txt';
 
-// 自检：确认 pdf-lib 已加载
-if (typeof PDFLib === "undefined") {
-  document.getElementById("home-page").innerHTML = '<div style="padding:60px;text-align:center;font-size:18px;color:#c62828">&#10007; pdf-lib 加载失败，请检查网络后刷新</div>';
-  throw new Error("pdf-lib not loaded");
-} else {
-  console.log("pdf-lib loaded, PDFDocument:", typeof PDFLib.PDFDocument);
+// 自检
+if (typeof PDFLib === 'undefined') {
+  throw new Error('pdf-lib not loaded');
 }
 const { PDFDocument } = PDFLib;
-
-// 自检：确认 pdf-lib 已加载
-if (typeof PDFLib === "undefined") {
-  document.getElementById("home-page").innerHTML = '<div style="padding:60px;text-align:center;font-size:18px;color:#c62828">❌ pdf-lib 加载失败，请检查网络后刷新</div>';
-  throw new Error("pdf-lib not loaded");
-} else {
-  console.log("✅ pdf-lib loaded, PDFDocument:", typeof PDFLib.PDFDocument);
-}
-const { PDFDocument } = PDFLib;
-
 let currentFiles = {};
 
 const TOOLS = [
