@@ -1,0 +1,83 @@
+/* ==================== 签章工具（sign-stamp） ==================== */
+.st-app { display: grid; grid-template-columns: 214px 1fr; gap: 12px; align-items: start; font-size: 13px; }
+.st-col { position: sticky; top: 92px; }
+
+.st-topbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border-radius: 12px; padding: 9px 12px 9px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.st-topbar .tip { font-size: 12.5px; color: #8a9199; line-height: 1.5; }
+.st-topbar .tip b { color: #444; font-weight: 600; }
+.st-acts { display: flex; gap: 8px; flex: 0 0 auto; }
+.st-acts .st-btn { width: auto; padding: 9px 18px; }
+.st-acts .st-btn + .st-btn { margin-top: 0; }
+
+.st-card { background: #fff; border-radius: 12px; padding: 13px 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 11px; }
+.st-card > h3 { font-size: 11.5px; font-weight: 700; color: #9aa0a6; letter-spacing: .6px; margin-bottom: 9px; }
+
+.st-file { display: flex; align-items: center; gap: 9px; padding: 8px; border: 1px dashed #d8dde3; border-radius: 9px; cursor: pointer; transition: border-color .15s, background .15s; }
+.st-file + .st-file { margin-top: 7px; }
+.st-file:hover { border-color: #1a73e8; background: #f6faff; }
+.st-file.on { border-style: solid; border-color: #cfe2ff; background: #f6faff; }
+.st-file .thumb { width: 32px; height: 32px; flex: 0 0 32px; border-radius: 5px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; overflow: hidden; }
+.st-file .thumb img { width: 100%; height: 100%; object-fit: contain; }
+.st-file .txt { flex: 1; min-width: 0; }
+.st-file .txt b { display: block; font-size: 12.5px; font-weight: 600; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-file .txt span { font-size: 11px; color: #a0a5ab; }
+
+.st-params { margin-top: 4px; }
+.st-p { margin-bottom: 11px; }
+.st-p:last-child { margin-bottom: 0; }
+.st-p .hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.st-p .hd > span { font-size: 12px; color: #666; }
+.st-p .hd em { font-style: normal; font-size: 12px; font-weight: 700; color: #1a73e8; }
+.st-p input[type=range] { width: 100%; height: 4px; -webkit-appearance: none; appearance: none; background: #e6eaf0; border-radius: 2px; outline: none; }
+.st-p input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%; background: #fff; border: 4px solid #1a73e8; box-shadow: 0 1px 4px rgba(0,0,0,.22); cursor: pointer; }
+.st-p input[type=range]:disabled { opacity: .45; }
+.st-p input[type=range]:disabled::-webkit-slider-thumb { border-color: #b9c0c8; }
+
+.st-reset { border: 1px solid #e2e6eb; background: #fff; color: #9aa0a6; width: 21px; height: 21px; border-radius: 6px; font-size: 12px; line-height: 1; cursor: pointer; transition: .15s; padding: 0; }
+.st-reset:hover:not(:disabled) { color: #1a73e8; border-color: #1a73e8; background: #f2f7ff; }
+.st-reset:disabled { opacity: .35; cursor: default; }
+
+.st-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: .15s; }
+.st-btn + .st-btn { margin-top: 7px; }
+.st-btn.ghost { background: #fff; border-color: #d8dde3; color: #444; }
+.st-btn.ghost:hover { border-color: #1a73e8; color: #1a73e8; background: #f6faff; }
+.st-btn.blue { background: #1a73e8; color: #fff; }
+.st-btn.blue:hover { background: #1557b0; }
+.st-btn.green { background: #0d904f; color: #fff; }
+.st-btn.green:hover { background: #0a7a43; }
+.st-btn:disabled { opacity: .5; cursor: not-allowed; }
+.st-btn.armed { background: #1a73e8 !important; border-color: #1a73e8 !important; color: #fff !important; box-shadow: 0 0 0 3px rgba(26,115,232,.16); }
+
+.st-stage-wrap { min-width: 0; }
+.st-stage { position: relative; background: #eceff4; border-radius: 12px; padding: 14px; overflow: auto; height: calc(100vh - 420px); min-height: 320px; }
+.st-stage.armed { cursor: crosshair; }
+.st-stage.armed .st-obj { cursor: crosshair; }
+.st-empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: #a8b0ba; font-size: 13px; text-align: center; padding: 24px; }
+.st-empty .big { font-size: 40px; opacity: .5; }
+.st-empty b { color: #55606d; font-size: 14px; font-weight: 600; }
+
+.st-page { position: relative; margin: 0 auto; background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,.13); line-height: 0; width: max-content; }
+.st-page canvas { display: block; }
+.st-overlay { position: absolute; inset: 0; }
+.st-obj { position: absolute; cursor: move; border: 1px solid transparent; transform-origin: center center; touch-action: none; }
+.st-obj img { width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.st-obj.sel { border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8, 0 0 0 4px rgba(26,115,232,.16); }
+.st-obj.seal.sel { border-color: #1a73e8; }
+
+.st-thumbs { display: flex; gap: 7px; overflow-x: auto; padding: 10px 2px 4px; }
+.st-thumb { position: relative; flex: 0 0 auto; width: 54px; border: 2px solid transparent; border-radius: 6px; overflow: hidden; cursor: pointer; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.13); padding: 0; }
+.st-thumb canvas { width: 100%; display: block; }
+.st-thumb.on { border-color: #1a73e8; }
+.st-thumb b { position: absolute; right: 0; bottom: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 9px; font-weight: 500; padding: 0 3px; border-radius: 3px 0 0 0; }
+.st-thumb .dot { position: absolute; left: 2px; top: 2px; width: 6px; height: 6px; border-radius: 50%; background: #0d904f; box-shadow: 0 0 0 1px #fff; }
+
+.st-log { margin-top: 11px; background: #fff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 4px rgba(0,0,0,.07); font-size: 12px; line-height: 1.75; color: #666; max-height: 74px; overflow: auto; }
+.st-log div { display: flex; gap: 6px; }
+.st-log .ok { color: #0d904f; }
+.st-log .warn { color: #b26a00; }
+
+@media (max-width: 720px) {
+  .st-app { grid-template-columns: 1fr; }
+  .st-col { position: static; }
+  .st-stage { height: 62vh; }
+}

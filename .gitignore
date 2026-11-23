@@ -5,3 +5,8 @@ __pycache__/
 node_modules/
 .venv/
 *.egg-info/
+
+# 签章工具的构建产物（源码在 _build/，这两个每次跑 apply.py / 测试都会变）
+_build/_out/
+_build/index.before.html
+_build/_check.js
