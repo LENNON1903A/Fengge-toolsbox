@@ -10,3 +10,10 @@ node_modules/
 _build/_out/
 _build/index.before.html
 _build/_check.js
+
+# 发布产物：真正上线的是 index.html + version.txt + README.md，
+# _dist/ 只是临时组装目录，别提交（避免和根目录的两份文件混淆）
+_dist/
+_dist.zip
+deploy-v*.zip
+_deploy_resp.json
