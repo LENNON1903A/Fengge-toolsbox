@@ -17,3 +17,6 @@ _dist/
 _dist.zip
 deploy-v*.zip
 _deploy_resp.json
+
+# Netlify CLI 的本地链接状态（里面是本机 siteId，换机器会自动重写，不该进版本库）
+.netlify/
