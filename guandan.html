@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>中茶掼蛋对局</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0ebe3;color:#2c2416;min-height:100vh}
+.header{background:linear-gradient(135deg,#2e7d32,#43a047);color:#fff;padding:12px 20px;text-align:center;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:20px;font-weight:700}
+.header .sub{font-size:12px;opacity:.75;margin-top:2px}
+.tabs{background:#fff;display:flex;border-bottom:1px solid #e0d8cc;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:8px}
+.tab{flex:1;padding:12px 0;text-align:center;font-size:12px;color:#8c7b6b;cursor:pointer;border:none;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color .2s}
+.tab.active{color:#2e7d32;font-weight:600}
+.tab .icon{font-size:20px}
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:600;color:#1b5e20;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.player-grid{display:flex;flex-wrap:wrap;gap:8px}
+.player-chip{padding:10px 16px;border-radius:20px;font-size:14px;cursor:pointer;border:2px solid #c8e6c9;background:#fff;color:#2e7d32;transition:all .2s;user-select:none}
+.player-chip.selected{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.player-chip.used{opacity:.35;pointer-events:none}
+.btn{padding:12px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:80px}
+.btn-primary{background:#2e7d32;color:#fff}
+.btn-primary:active{background:#1b5e20}
+.btn-outline{background:#fff;color:#2e7d32;border:2px solid #2e7d32}
+.btn-outline:active{background:#e8f5e9}
+.btn-sm{padding:6px 14px;font-size:13px;border-radius:8px}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-success{background:#27ae60;color:#fff}
+.btn-block{width:100%}
+.btn:disabled{opacity:.4;pointer-events:none}
+.input{padding:12px;border-radius:10px;border:2px solid #c8e6c9;font-size:15px;width:100%;outline:none}
+.input:focus{border-color:#2e7d32}
+.input-row{display:flex;gap:8px;margin-bottom:12px}
+.input-row .input{flex:1}
+.team-col{flex:1;border-radius:12px;padding:12px;min-height:100px;text-align:center;border:2px dashed #c8e6c9;transition:all .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.team-col.filled{border-style:solid}
+.team-col.team-a{border-color:#e74c3c;background:#fff5f5}
+.team-col.team-b{border-color:#3498db;background:#f5f9ff}
+.team-col.winner{border-width:3px;box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+.team-label{font-size:13px;font-weight:600;color:#8c7b6b}
+.team-players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.team-player{padding:8px 14px;border-radius:16px;font-size:14px;background:#f5f0eb;color:#4e342e;font-weight:500;cursor:pointer;user-select:none}
+.team-player:hover{opacity:.8}
+.game-item{padding:14px;border-radius:10px;background:#faf7f2;margin-bottom:8px;display:flex;flex-direction:column;gap:8px}
+.game-meta{font-size:12px;color:#8c7b6b;display:flex;gap:12px;align-items:center}
+.game-teams{display:flex;gap:8px;align-items:center;font-size:14px}
+.game-team{padding:4px 10px;border-radius:6px;font-size:13px}
+.game-team.win{background:#e8f5e9;color:#2e7d32;font-weight:600}
+.game-team.lose{background:#fff3e0;color:#e65100}
+.game-vs{color:#bcaaa4;font-size:13px}
+.game-actions{display:flex;gap:6px;margin-top:4px}
+.bill-player-wrap{padding:14px 16px;background:#fff;border-radius:10px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.bill-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.bill-info{display:flex;flex-direction:column;gap:2px}
+.bill-name{font-weight:600;font-size:15px}
+.bill-name.retired{color:#8c7b6b}
+.bill-numbers{display:flex;gap:10px;font-size:13px;color:#6d6055}
+.bill-detail{display:none;margin-top:8px}
+.bill-detail.open{display:block}
+.payment-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0ebe3;font-size:13px}
+.payment-status{font-size:12px;padding:3px 8px;border-radius:10px}
+.payment-status.paid{background:#e8f5e9;color:#2e7d32}
+.payment-status.unpaid{background:#fff3e0;color:#e65100}
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.stat-num{font-size:28px;font-weight:700;color:#2e7d32}
+.stat-label{font-size:12px;color:#8c7b6b;margin-top:2px}
+.rank-item{display:flex;align-items:center;padding:10px 14px;background:#fff;border-radius:10px;margin-bottom:6px;gap:10px}
+.rank-pos{font-size:18px;font-weight:700;width:28px;text-align:center}
+.rank-pos.gold{color:#f39c12}
+.rank-pos.silver{color:#95a5a6}
+.rank-pos.bronze{color:#cd7f32}
+.rank-info{flex:1}
+.rank-name{font-weight:600;font-size:15px}
+.rank-detail{font-size:12px;color:#8c7b6b}
+.rank-rate{font-size:14px;font-weight:700;color:#2e7d32}
+.hbar-wrap{margin-bottom:10px}
+.hbar-title{font-size:13px;font-weight:600;color:#1b5e20;margin-bottom:4px}
+.hbar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:12px}
+.hbar-date{color:#8c7b6b;min-width:42px;text-align:right}
+.hbar-track{flex:1;background:#f0ebe3;border-radius:4px;height:18px;overflow:hidden;position:relative}
+.hbar-fill{height:100%;border-radius:4px;transition:width .3s;min-width:2px}
+.hbar-fill.win{background:#27ae60}
+.hbar-fill.lose{background:#e74c3c}
+.hbar-val{color:#4e342e;min-width:36px;font-weight:600}
+.hbar-empty{flex:1;text-align:center;font-size:12px;color:#bcaaa4}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:17px;margin-bottom:16px;text-align:center}
+.modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:center}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1b5e20;color:#fff;padding:10px 24px;border-radius:20px;font-size:14px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.empty{padding:40px 20px;text-align:center;color:#bcaaa4;font-size:14px}
+.empty .icon{font-size:40px;margin-bottom:8px;display:block}
+.date-input{-webkit-appearance:none;padding:12px;border-radius:10px;border:2px solid #c8e6c9;font-size:15px;width:100%;outline:none;background:#fff}
+.date-input:focus{border-color:#2e7d32}
+.guide-text{font-size:13px;color:#8c7b6b;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="header"><h1>中茶掼蛋对局</h1><div class="sub">四人掼蛋 · 对局记录 · 账单统计</div></div>
+<div class="tabs"><button class="tab active" data-page="record"><span class="icon">📝</span>记录</button><button class="tab" data-page="bills"><span class="icon">💰</span>账单</button><button class="tab" data-page="stats"><span class="icon">📊</span>统计</button><button class="tab" data-page="manage"><span class="icon">⚙️</span>管理</button></div>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+const S='guandan_v2';
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function load(){try{var r=localStorage.getItem(S);if(r){var d=JSON.parse(r);d.games=(d.games||[]).map(function(g){if(!g.payments){var l=g.winner==='A'?g.teamB:g.teamA;g.payments={};l.forEach(function(id){g.payments[id]={s:'unpaid',a:100}})}return g});return d}}catch(e){}return{players:[],games:[]}}
+function save(d){localStorage.setItem(S,JSON.stringify(d))}
+var D=load();
+// 迁移旧数据
+if(localStorage.getItem('guandan_v1')&&!localStorage.getItem(S)){var old=JSON.parse(localStorage.getItem('guandan_v1'));D=old;save(D);localStorage.removeItem('guandan_v1')}
+function gp(id){return D.players.find(function(p){return p.id===id})}
+function pn(id){var p=gp(id);return p?p.name:'已退出'}
+function ap(){return D.players.filter(function(p){return p.active})}
+var tt;
+function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){e.classList.remove('show')},1800)}
+function sp(page){document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.page===page)});render(page)}
+document.querySelectorAll('.tab').forEach(function(tab){tab.addEventListener('click',function(){sp(tab.dataset.page)})});
+function render(page){var a=document.getElementById('app');switch(page){case'record':a.innerHTML=rRec();bRec();break;case'bills':a.innerHTML=rBills();break;case'stats':a.innerHTML=rStats();break;case'manage':a.innerHTML=rMgr();bMgr();break}}
+
+// ===== 记录对局（新版：挑2人进一队，其余自动进二队）=====
+function rRec(){var ac=ap();if(ac.length<4)return'<div class="empty"><span class="icon">👥</span><br>至少需要4名活跃玩家<br><br><button class="btn btn-outline btn-sm" onclick="sp(\'manage\')">去添加玩家</button></div>';var h='<div class="card"><div class="card-title">📝 新对局</div>';h+='<div class="guide-text">点击2人加入 🔴 一队，其余自动归入 🔵 二队</div>';h+='<div class="player-grid" id="ps">';ac.forEach(function(p){h+='<div class="player-chip" data-pid="'+p.id+'">'+p.name+'</div>'});h+='</div>';h+='<div style="display:flex;gap:12px;margin-top:12px">';h+='<div class="team-col team-a" id="tac"><div class="team-label">🔴 一队</div><div class="team-players" id="tap"></div></div>';h+='<div class="team-col team-b" id="tbc"><div class="team-label">🔵 二队</div><div class="team-players" id="tbp"></div></div>';h+='</div>';h+='<div style="text-align:center;margin-top:8px"><button class="btn btn-sm btn-outline" id="brp" style="display:none">重置</button></div>';h+='<div id="ws" style="display:none;margin-top:12px;text-align:center">';h+='<div style="font-size:14px;color:#1b5e20;margin-bottom:10px">哪队赢了？</div>';h+='<div style="display:flex;gap:12px;justify-content:center">';h+='<button class="btn btn-outline" id="bwa" style="border-color:#e74c3c;color:#e74c3c">🔴 一队赢</button>';h+='<button class="btn btn-outline" id="bwb" style="border-color:#3498db;color:#3498db">🔵 二队赢</button>';h+='</div></div>';h+='<div style="margin-top:12px"><div style="font-size:13px;color:#8c7b6b;margin-bottom:6px">对局日期</div>';var td=new Date().toISOString().slice(0,10);h+='<input type="date" class="date-input" id="gd" value="'+td+'"></div>';h+='<div style="margin-top:16px"><button class="btn btn-primary btn-block" id="bsg" disabled>确认记录</button></div>';h+='</div>';h+='<div class="card"><div class="card-title">📋 对局记录</div>';var gs=D.games.slice().sort(function(a,b){return b.date.localeCompare(a.date)});if(gs.length===0){h+='<div class="empty">暂无记录</div>'}else{gs.forEach(function(g){var ta=g.teamA.map(pn).join('、');var tb=g.teamB.map(pn).join('、');var wt=g.winner==='A'?'一队':'二队';var ls=g.winner==='A'?g.teamB:g.teamA;var allP=ls.every(function(id){return g.payments[id]&&g.payments[id].s==='paid'});h+='<div class="game-item">';h+='<div class="game-meta"><span>'+g.date+'</span><span>'+wt+'胜</span><span style="color:'+(allP?'#27ae60':'#e65100')+'">'+(allP?'已结清':'有未付')+'</span></div>';h+='<div class="game-teams"><span class="game-team '+(g.winner==='A'?'win':'lose')+'">'+ta+'</span><span class="game-vs">VS</span><span class="game-team '+(g.winner==='B'?'win':'lose')+'">'+tb+'</span></div>';h+='<div class="game-actions"><button class="btn btn-sm btn-outline beg" data-gid="'+g.id+'">编辑</button> <button class="btn btn-sm btn-outline bdg" data-gid="'+g.id+'" style="color:#e74c3c;border-color:#e74c3c">删除</button></div>';h+='</div>'})}h+='</div>';return h}
+
+function bRec(){var pr={teamA:[],teamB:[]},wn=null;var allChips=document.querySelectorAll('#ps .player-chip');var tcA=document.getElementById('tac');var tcB=document.getElementById('tbc');var tpA=document.getElementById('tap');var tpB=document.getElementById('tbp');var ws=document.getElementById('ws');var bs=document.getElementById('bsg');var br=document.getElementById('brp');var gd=document.getElementById('gd');
+function up(){var ac=ap();tpA.innerHTML=pr.teamA.map(function(pid){return'<span class="team-player" data-pid="'+pid+'">'+pn(pid)+'</span>'}).join('');tpB.innerHTML=pr.teamB.map(function(pid){return'<span class="team-player" data-pid="'+pid+'">'+pn(pid)+'</span>'}).join('');tcA.classList.toggle('filled',pr.teamA.length===2);tcB.classList.toggle('filled',pr.teamB.length===2);br.style.display=(pr.teamA.length>0)?'':'none';var pd=pr.teamA.length===2&&pr.teamB.length===2;ws.style.display=pd?'':'none';if(!pd){wn=null;tcA.classList.remove('winner');tcB.classList.remove('winner')}bs.disabled=!(pd&&wn);
+// 更新 chip 状态
+allChips.forEach(function(c){var pid=c.dataset.pid;if(pr.teamA.indexOf(pid)!==-1){c.classList.add('selected');c.classList.add('used')}else if(pr.teamB.indexOf(pid)!==-1){c.classList.add('selected');c.classList.add('used')}else{c.classList.remove('selected');c.classList.remove('used')}})}
+allChips.forEach(function(c){c.addEventListener('click',function(){var pid=c.dataset.pid;if(pr.teamA.indexOf(pid)!==-1){pr.teamA=pr.teamA.filter(function(id){return id!==pid});if(pr.teamB.length>0){var r=pr.teamB.pop();pr.teamA.push(r)}wn=null;up();return}if(pr.teamB.indexOf(pid)!==-1){pr.teamB=pr.teamB.filter(function(id){return id!==pid});if(pr.teamA.length===2){var remaining=ap().filter(function(p){return pr.teamA.indexOf(p.id)===-1&&pr.teamB.indexOf(p.id)===-1});if(remaining.length>=1){pr.teamB.push(remaining[0].id)}}wn=null;up();return}if(pr.teamA.length<2){pr.teamA.push(pid);if(pr.teamA.length===2){pr.teamB=[];var rest=ap().filter(function(p){return pr.teamA.indexOf(p.id)===-1});pr.teamB=rest.slice(0,2).map(function(p){return p.id})}}wn=null;up()})});
+// 点击二队成员可以踢回并补新人
+document.getElementById('tbp').addEventListener('click',function(e){var t=e.target.closest('.team-player');if(!t)return;var pid=t.dataset.pid;pr.teamB=pr.teamB.filter(function(id){return id!==pid});var remaining=ap().filter(function(p){return pr.teamA.indexOf(p.id)===-1&&pr.teamB.indexOf(p.id)===-1});if(remaining.length>=1){pr.teamB.push(remaining[0].id)}wn=null;up()});
+if(br)br.addEventListener('click',function(){pr={teamA:[],teamB:[]};wn=null;up()});
+var ba=document.getElementById('bwa'),bb=document.getElementById('bwb');if(ba)ba.addEventListener('click',function(){wn='A';tcA.classList.add('winner');tcB.classList.remove('winner');bs.disabled=!wn});if(bb)bb.addEventListener('click',function(){wn='B';tcB.classList.add('winner');tcA.classList.remove('winner');bs.disabled=!wn});
+bs.addEventListener('click',function(){var msg='确认：'+pr.teamA.map(pn).join('、')+' VS '+pr.teamB.map(pn).join('、')+'，'+(wn==='A'?'一队':'二队')+'胜？\n输家各付100元';if(!confirm(msg))return;var ls=wn==='A'?pr.teamB:pr.teamA;var pays={};ls.forEach(function(id){pays[id]={s:'unpaid',a:100}});var g={id:uid(),date:gd.value,players:pr.teamA.concat(pr.teamB),teamA:pr.teamA.slice(),teamB:pr.teamB.slice(),winner:wn,payments:pays};D.games.push(g);save(D);toast('已记录');sp('record')});
+document.querySelectorAll('.beg').forEach(function(b){b.addEventListener('click',function(){editGame(b.dataset.gid)})});document.querySelectorAll('.bdg').forEach(function(b){b.addEventListener('click',function(){if(!confirm('确定删除这条对局记录？'))return;D.games=D.games.filter(function(g){return g.id!==b.dataset.gid});save(D);toast('已删除');sp('record')})})}
+function editGame(gid){var g=D.games.find(function(x){return x.id===gid});if(!g)return;var h='<div class="modal-overlay" id="emo"><div class="modal"><h3>编辑对局</h3>';h+='<div style="font-size:14px;margin-bottom:12px">'+g.teamA.map(pn).join('、')+' VS '+g.teamB.map(pn).join('、')+'</div>';h+='<div style="margin-bottom:12px"><div style="font-size:13px;color:#8c7b6b;margin-bottom:4px">日期</div>';h+='<input type="date" class="date-input" id="edt" value="'+g.date+'"></div>';h+='<div style="font-size:13px;color:#8c7b6b;margin-bottom:6px">哪队赢了？</div>';h+='<div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px">';h+='<button class="btn btn-sm '+(g.winner==='A'?'btn-primary':'btn-outline')+'" id="ew-a">一队赢</button>';h+='<button class="btn btn-sm '+(g.winner==='B'?'btn-primary':'btn-outline')+'" id="ew-b">二队赢</button>';h+='</div>';h+='<div class="modal-actions"><button class="btn btn-outline btn-sm" id="ec">取消</button> <button class="btn btn-primary btn-sm" id="es">保存</button></div>';h+='</div></div>';var ov=document.createElement('div');ov.innerHTML=h;document.body.appendChild(ov.firstElementChild);var ew=g.winner;document.getElementById('ew-a').addEventListener('click',function(){ew='A';this.className='btn btn-sm btn-primary';document.getElementById('ew-b').className='btn btn-sm btn-outline'});document.getElementById('ew-b').addEventListener('click',function(){ew='B';this.className='btn btn-sm btn-primary';document.getElementById('ew-a').className='btn btn-sm btn-outline'});document.getElementById('ec').addEventListener('click',function(){document.getElementById('emo').remove()});document.getElementById('es').addEventListener('click',function(){var nd=document.getElementById('edt').value;if(ew!==g.winner){var nl=ew==='A'?g.teamB:g.teamA;g.payments={};nl.forEach(function(id){g.payments[id]={s:'unpaid',a:100}})}g.winner=ew;g.date=nd;save(D);document.getElementById('emo').remove();toast('已更新');sp('record')});document.getElementById('emo').addEventListener('click',function(e){if(e.target===this)this.remove()})}
+
+// ===== 账单（不变）=====
+function rBills(){if(D.players.length===0)return'<div class="empty"><span class="icon">👥</span><br>还没有玩家</div>';if(D.games.length===0)return'<div class="empty"><span class="icon">📋</span><br>还没有对局记录</div>';var bls={};D.players.forEach(function(p){bls[p.id]={nm:p.name,ac:p.active,to:0,tp:0,tu:0,gd:[]}});var gs=D.games.slice().sort(function(a,b){return b.date.localeCompare(a.date)});gs.forEach(function(g){var ls=g.winner==='A'?g.teamB:g.teamA;ls.forEach(function(id){var p=g.payments[id]||{s:'unpaid',a:100};if(bls[id]){bls[id].to+=p.a;if(p.s==='paid')bls[id].tp+=p.a;else bls[id].tu+=p.a;bls[id].gd.push({gid:g.id,pid:id,pnm:bls[id].nm,dt:g.date,wn:g.winner==='A'?'一队':'二队',st:p.s,am:p.a})}})});var sr=Object.values(bls).sort(function(a,b){if(a.tu!==b.tu)return b.tu-a.tu;return b.to-a.to});var to=0,tp=0,tu=0;sr.forEach(function(b){to+=b.to;tp+=b.tp;tu+=b.tu});var h='<div class="stat-cards">';h+='<div class="stat-card"><div class="stat-num">'+to+'</div><div class="stat-label">总应付（元）</div></div>';h+='<div class="stat-card"><div class="stat-num">'+tp+'</div><div class="stat-label">已支付（元）</div></div>';h+='<div class="stat-card"><div class="stat-num" style="color:'+(tu>0?'#e65100':'#27ae60')+'">'+tu+'</div><div class="stat-label">未支付（元）</div></div>';h+='<div class="stat-card"><div class="stat-num">'+(to?Math.round(tp/to*100):0)+'%</div><div class="stat-label">支付率</div></div>';h+='</div>';sr.forEach(function(b){var cl=b.ac?'':' retired';h+='<div class="bill-player-wrap">';h+='<div class="bill-header" onclick="var d=this.nextElementSibling;var o=!d.classList.contains(\'open\');d.classList.toggle(\'open\');this.querySelector(\'.expand-icon\').textContent=o?\'▲\':\'▼\'">';h+='<div class="bill-info"><span class="bill-name'+cl+'">'+b.nm+(b.ac?'':' · 已退出')+'</span>';h+='<span class="bill-numbers"><span>应付 '+b.to+'</span><span>已付 '+b.tp+'</span><span style="color:'+(b.tu>0?'#e65100':'#27ae60')+'">未付 '+b.tu+'</span></span></div>';h+='<span class="expand-icon" style="color:#8c7b6b">▼</span></div>';h+='<div class="bill-detail">';if(b.gd.length===0){h+='<div style="font-size:13px;color:#bcaaa4;padding:8px 0">无输局记录</div>'}else{b.gd.forEach(function(d){var sc=d.st==='paid'?'paid':'unpaid';var st=d.st==='paid'?'已付':'未付';var bl=d.st==='paid'?'标未付':'标已付';var bc=d.st==='paid'?'btn-outline':'btn-success';h+='<div class="payment-row"><span>'+d.pnm+' · '+d.dt+' · '+d.wn+'胜</span>';h+='<div style="display:flex;align-items:center;gap:8px"><span>'+d.am+'元</span><span class="payment-status '+sc+'">'+st+'</span>';h+='<button class="btn btn-sm '+bc+'" onclick="tfp(\''+d.gid+'\',\''+d.pid+'\')" style="padding:2px 8px;font-size:12px;min-width:auto">'+bl+'</button></div></div>'})}h+='</div></div>'});return h}
+
+// ===== 统计（新版：按日横向柱状图）=====
+function rStats(){if(D.players.length===0)return'<div class="empty"><span class="icon">👥</span><br>还没有玩家</div>';if(D.games.length===0)return'<div class="empty"><span class="icon">📊</span><br>还没有对局记录</div>';var gs=D.games.slice().sort(function(a,b){return a.date.localeCompare(b.date)});var tg=gs.length,tpool=0,tpa=0,tu=0;gs.forEach(function(g){Object.values(g.payments||{}).forEach(function(p){tpool+=p.a;if(p.s==='paid')tpa+=p.a;else tu+=p.a})});var h='<div class="stat-cards">';h+='<div class="stat-card"><div class="stat-num">'+tg+'</div><div class="stat-label">总对局数</div></div>';h+='<div class="stat-card"><div class="stat-num">'+tpool+'</div><div class="stat-label">资金池总额</div></div>';h+='<div class="stat-card"><div class="stat-num" style="color:#27ae60">'+tpa+'</div><div class="stat-label">已收金额</div></div>';h+='<div class="stat-card"><div class="stat-num" style="color:#e65100">'+tu+'</div><div class="stat-label">未收金额</div></div>';h+='</div>';var ps={};D.players.forEach(function(p){ps[p.id]={nm:p.name,ac:p.active,w:0,l:0,to:0,tp:0,tu:0,daily:{}}});gs.forEach(function(g){var day=g.date;var ws=g.winner==='A'?g.teamA:g.teamB;var ls=g.winner==='A'?g.teamB:g.teamA;ws.forEach(function(id){if(!ps[id])return;if(!ps[id].daily[day])ps[id].daily[day]={g:0,w:0};ps[id].daily[day].g++;ps[id].daily[day].w++;ps[id].w++});ls.forEach(function(id){if(!ps[id])return;if(!ps[id].daily[day])ps[id].daily[day]={g:0,w:0};ps[id].daily[day].g++;ps[id].l++;var p=g.payments[id]||{s:'unpaid',a:100};ps[id].to+=p.a;if(p.s==='paid')ps[id].tp+=p.a;else ps[id].tu+=p.a})});var rk=Object.values(ps).filter(function(s){return s.w+s.l>0}).sort(function(a,b){var ra=a.w/(a.w+a.l),rb=b.w/(b.w+b.l);if(rb!==ra)return rb-ra;return(b.w+b.l)-(a.w+a.l)});h+='<div class="card"><div class="card-title">🏆 胜率排名</div>';if(rk.length===0){h+='<div class="empty">暂无数据</div>'}else{var md=['gold','silver','bronze'];rk.forEach(function(s,i){var t=s.w+s.l,rt=Math.round(s.w/t*100);var cl=i<3?md[i]:'';var ic=i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);h+='<div class="rank-item"><div class="rank-pos '+cl+'">'+ic+'</div>';h+='<div class="rank-info"><div class="rank-name">'+s.nm+(s.ac?'':' <span style="font-size:11px;color:#8c7b6b">已退出</span>')+'</div>';h+='<div class="rank-detail">'+s.w+'胜 '+s.l+'负 · 应付'+s.to+' · 已付'+s.tp+' · 未付'+s.tu+'</div></div>';h+='<div class="rank-rate">'+rt+'%</div></div>'})}h+='</div>';
+// 横向柱状图：按日
+h+='<div class="card"><div class="card-title">📈 胜率走势（按日）</div>';var allDays=new Set();Object.values(ps).forEach(function(s){Object.keys(s.daily).forEach(function(d){allDays.add(d)})});var days=Array.from(allDays).sort();if(days.length===0){h+='<div class="empty">暂无数据</div>'}else{var aw=Object.values(ps).filter(function(s){return s.w+s.l>0});aw.forEach(function(s){h+='<div class="hbar-wrap"><div class="hbar-title">'+s.nm+'</div>';var hasData=false;days.forEach(function(d){var dd=s.daily[d];if(dd&&dd.g>0){hasData=true;var rt=Math.round(dd.w/dd.g*100);var w=Math.max(rt,4);h+='<div class="hbar-row"><div class="hbar-date">'+d.slice(5)+'</div><div class="hbar-track"><div class="hbar-fill '+(rt>=50?'win':'lose')+'" style="width:'+w+'%"></div></div><div class="hbar-val">'+dd.w+'/'+dd.g+'</div></div>'}});if(!hasData){h+='<div class="hbar-empty">该时段无对局</div>'}h+='</div>'});}h+='</div>';return h}
+
+// ===== 管理 =====
+function rMgr(){var h='<div class="card"><div class="card-title">👥 玩家管理</div>';h+='<div class="input-row"><input class="input" id="npn" placeholder="输入玩家姓名" maxlength="10">';h+='<button class="btn btn-primary btn-sm" id="bap">添加</button></div>';h+='<div id="pli">';if(D.players.length===0){h+='<div class="empty">还没有玩家，在上方添加</div>'}else{D.players.forEach(function(p){h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ebe3">';h+='<span style="font-size:14px;'+(p.active?'':'color:#bcaaa4')+'">'+p.name+(p.active?'':' · 已退出')+'</span>';h+='<div style="display:flex;gap:6px">';if(p.active){h+='<button class="btn btn-sm btn-outline bdac" data-pid="'+p.id+'">退出</button>'}else{h+='<button class="btn btn-sm btn-outline batv" data-pid="'+p.id+'">重新加入</button>'}h+='</div></div>'})}h+='</div></div>';h+='<div class="card"><div class="card-title">💾 数据管理</div>';h+='<div style="display:flex;gap:10px;flex-wrap:wrap">';h+='<button class="btn btn-outline" id="bex">导出备份</button>';h+='<button class="btn btn-outline" id="bim">导入数据</button>';h+='<input type="file" id="ifil" accept=".json" style="display:none">';h+='</div>';h+='<div style="font-size:11px;color:#bcaaa4;margin-top:8px">换手机或清缓存前记得导出备份</div>';h+='<div style="margin-top:16px"><button class="btn btn-danger btn-sm" id="bclr">清空所有数据</button></div>';h+='</div>';return h}
+function bMgr(){var ba=document.getElementById('bap'),inp=document.getElementById('npn');if(ba){ba.addEventListener('click',function(){var n=inp.value.trim();if(!n){toast('请输入姓名');return}if(D.players.some(function(p){return p.name===n&&p.active})){toast('已有同名活跃玩家');return}var ex=D.players.find(function(p){return p.name===n&&!p.active});if(ex){ex.active=true;toast(n+' 已重新加入')}else{D.players.push({id:uid(),name:n,active:true,createdAt:new Date().toISOString().slice(0,10)});toast(n+' 已添加')}save(D);inp.value='';sp('manage')})}if(inp){inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&ba)ba.click()})}document.querySelectorAll('.bdac').forEach(function(b){b.addEventListener('click',function(){var p=gp(b.dataset.pid);if(!confirm('确定让 '+p.name+' 退出？历史记录会保留。'))return;p.active=false;save(D);toast(p.name+' 已退出');sp('manage')})});document.querySelectorAll('.batv').forEach(function(b){b.addEventListener('click',function(){var p=gp(b.dataset.pid);p.active=true;save(D);toast(p.name+' 已重新加入');sp('manage')})});var bex=document.getElementById('bex');if(bex){bex.addEventListener('click',function(){var bl=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});var u=URL.createObjectURL(bl);var a=document.createElement('a');a.href=u;a.download='中茶掼蛋备份_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(u);toast('已导出')})}var bim=document.getElementById('bim'),ifil=document.getElementById('ifil');if(bim)bim.addEventListener('click',function(){ifil.click()});if(ifil){ifil.addEventListener('change',function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){try{var d=JSON.parse(e.target.result);if(!d.players||!d.games)throw new Error('err');if(!confirm('将导入 '+d.players.length+' 名玩家和 '+d.games.length+' 局记录，会覆盖当前数据，确定吗？'))return;d.games=d.games.map(function(g){if(!g.payments){var l=g.winner==='A'?g.teamB:g.teamA;g.payments={};l.forEach(function(id){g.payments[id]={s:'unpaid',a:100}})}return g});D=d;save(D);toast('数据已导入');sp('manage')}catch(ex){toast('文件格式错误，无法导入')}};r.readAsText(f);this.value=''})}var bcl=document.getElementById('bclr');if(bcl){bcl.addEventListener('click',function(){if(!confirm('确定清空所有数据？此操作不可恢复！'))return;if(!confirm('再次确认：真的要删除所有数据吗？'))return;D={players:[],games:[]};save(D);toast('所有数据已清空');sp('manage')})}}
+window.tfp=function(gid,pid){var g=D.games.find(function(x){return x.id===gid});if(!g||!g.payments[pid])return;var c=g.payments[pid].s;g.payments[pid].s=c==='paid'?'unpaid':'paid';save(D);toast(c==='paid'?'已标为未付':'已标为已付');sp('bills')};
+render('record');
+
+</script>
+</body>
+</html>
